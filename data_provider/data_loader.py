@@ -10,6 +10,18 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
+class Dataset_BC_17_variables_5_years(Dataset):
+    def __init__(self, root_path, flag='train', size=None,
+                 features='S', data_path='bankrupt_companies_with_17_variables_5_years.csv',
+                 target='label', scale=True, timeenc=0, freq='y'):
+
+        # whatever we get from the args we will not use it!
+        self.scaler = StandardScaler()
+        df_raw = pd.read_csv(os.path.join(root_path, data_path))
+
+        self.data_x = df_raw.drop(['label'], axis=1).values
+
+
 class Dataset_ETT_hour(Dataset):
     def __init__(self, root_path, flag='train', size=None,
                  features='S', data_path='ETTh1.csv',
