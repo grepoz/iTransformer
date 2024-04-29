@@ -12,14 +12,81 @@ warnings.filterwarnings('ignore')
 
 class Dataset_BC_17_variables_5_years(Dataset):
     def __init__(self, root_path, flag='train', size=None,
-                 features='S', data_path='bankrupt_companies_with_17_variables_5_years.csv',
-                 target='label', scale=True, timeenc=0, freq='y'):
+                 features='S', data_path='bankrupt_companies_with_17_variables_5_years_version2_split.csv',
+                 target='label', scale=True, timeenc=0, freq='y', company_observation_period=5):
 
-        # whatever we get from the args we will not use it!
+        assert flag in ['train', 'test', 'val']
+        self.set_type = flag
+
+        # self.features = features
+        # self.target = target
+        self.scale = scale
+        # self.timeenc = timeenc
+        # self.freq = freq
+        self.company_observation_period = company_observation_period
+
+        self.root_path = root_path
+        self.data_path = data_path
+        self.__read_data__()
+
+    def __read_data__(self):
+
         self.scaler = StandardScaler()
-        df_raw = pd.read_csv(os.path.join(root_path, data_path))
+        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
+        df = df_raw[df_raw['subset'] == self.set_type]
 
-        self.data_x = df_raw.drop(['label'], axis=1).values
+        df_data_x = df.drop(columns=['cik', 'ticker', 'label', 'subset', 'Fiscal Period']).to_numpy()
+
+        if self.scale:
+            self.scaler.fit(df_data_x)
+            df_data_x = self.scaler.transform(df_data_x)
+
+        data_x = self.__get_data_grouped_by_years__(df_data_x)
+
+        data_y = df.groupby('cik').agg({'label': 'first'}).reset_index()
+        data_y = data_y['label'].astype(int).to_numpy()
+
+        self.data_x = data_x
+        self.data_y = data_y
+        # self.data_stamp = todo
+
+        # custom batching mechanism - each object has `company_observation_period` number of observations,
+        # so we cannot use DataLoader
+        self.batched_x, self.batched_y = self.__create_batches_from_data__(batch_size=32)
+
+    def __get_data_grouped_by_years__(self, array):
+
+        variables_count = array.shape[1]
+
+        grouped_by_years_array = array.reshape(-1, self.company_observation_period, variables_count)
+
+        return grouped_by_years_array
+
+    def __create_batches_from_data__(self, batch_size):
+        # create batched X from data
+        x = self.data_x
+
+        company_observation_period = x.shape[1]
+        variables_count = x.shape[2]
+
+        complete_batches_count = x.shape[0] // batch_size
+
+        X_aligned_to_batch_size = x[:complete_batches_count * batch_size]
+        batched_X = X_aligned_to_batch_size.reshape(-1, batch_size, company_observation_period, variables_count)
+
+        # create batched y from data
+        y = self.data_y
+
+        y_aligned_to_batch_size = y[:complete_batches_count * batch_size]
+        batched_y = y_aligned_to_batch_size.reshape(-1, batch_size, 1)
+
+        return batched_X, batched_y
+
+    def __getitem__(self, index):
+        return self.batched_x[index], self.batched_y[index], [[[]]], [[[]]]
+
+    def __len__(self):
+        return len(self.batched_x)
 
 
 class Dataset_ETT_hour(Dataset):

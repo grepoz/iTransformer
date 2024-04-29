@@ -87,6 +87,31 @@ def visual(true, preds=None, name='./pic/test.pdf'):
     plt.savefig(name, bbox_inches='tight')
 
 
+def save_metrics(acc, loss, name='./pic/test_metrics.pdf'):
+    """
+    Metrics visualization: accuracy, loss
+    """
+    plt.figure()
+
+    # Create the primary axis for accuracy
+    ax1 = plt.gca()  # Get current axes
+    plt.plot(acc, label='Accuracy', linewidth=2, color='blue')  # Plot accuracy on the primary axis
+    plt.ylabel('Accuracy')  # Set label for primary axis
+    ax1.tick_params(axis='y', colors='blue')  # Change accuracy y-axis tick labels to blue
+
+    # Create a twin axis for loss, sharing the same x-axis
+    ax2 = ax1.twinx()
+    plt.plot(loss, label='Loss', linewidth=2, color='red')  # Plot loss on the twin axis
+    plt.ylabel('Loss')  # Set label for the twin axis
+    ax2.tick_params(axis='y', colors='red')  # Change loss y-axis tick labels to red
+
+    # Ensure labels and legends are correct
+    plt.legend()
+
+    # Save the figure
+    plt.savefig(name, bbox_inches='tight')
+
+
 def adjustment(gt, pred):
     anomaly_state = False
     for i in range(len(gt)):

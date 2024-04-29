@@ -39,3 +39,9 @@ def metric(pred, true):
     mspe = MSPE(pred, true)
 
     return mae, mse, rmse, mape, mspe
+
+
+def calculate_accuracy(outputs, batch_y):
+    predictions = np.where(outputs > 0.5, 1, 0)
+
+    return np.mean(predictions == batch_y)

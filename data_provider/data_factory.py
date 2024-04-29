@@ -46,10 +46,20 @@ def data_provider(args, flag):
         freq=freq,
     )
     print(flag, len(data_set))
-    data_loader = DataLoader(
-        data_set,
-        batch_size=batch_size,
-        shuffle=shuffle_flag,
-        num_workers=args.num_workers,
-        drop_last=drop_last)
+
+    if args.data == 'bankrupt_companies_with_17_variables_5_years':
+        data_loader = DataLoader(
+            data_set,
+            batch_size=1,
+            shuffle=False,
+            num_workers=1,
+            drop_last=False)
+    else:
+        data_loader = DataLoader(
+            data_set,
+            batch_size=batch_size,
+            shuffle=shuffle_flag,
+            num_workers=args.num_workers,
+            drop_last=drop_last)
+
     return data_set, data_loader
